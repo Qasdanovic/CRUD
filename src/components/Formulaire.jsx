@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { v4 as uuid } from "uuid";
-import { addUser, deleteUser } from "../redux-toolkit/userReducer";
+import { addUser, deleteUser, updateUser } from "../redux-toolkit/userReducer";
 
 function Formulaire() {
   const initialState = {
@@ -12,11 +12,17 @@ function Formulaire() {
   };
 
   const [formData, setFormData] = useState(initialState);
+  const [searchedUser, setSearchedUser] = useState(null);
   const dispatch = useDispatch();
 
   const getData = (e) => {
     const { id, value } = e.target;
     setFormData({ ...formData, [id]: value });
+  };
+
+  const getDataToUpdate = (e) => {
+    const { id, value } = e.target;
+    setSearchedUser({ ...searchedUser, [id]: value });
   };
 
   const handelSubmit = (e) => {
@@ -29,6 +35,22 @@ function Formulaire() {
     dispatch(addUser(formData));
     setFormData(initialState);
   };
+
+  const getUser = (id) => {
+    const dataWanted = users.find((user) => user.id === id)
+    setSearchedUser(dataWanted)
+    setFormData(dataWanted)
+  };
+
+  const handelUpdate = (e) => {
+    e.preventDefault()
+    const payload = {
+      id : searchedUser.id,
+      newData : searchedUser
+    }
+    dispatch(updateUser(payload))
+    setSearchedUser(null)
+  }
 
   const users = useSelector((state) => state.users.value);
 
@@ -45,12 +67,12 @@ function Formulaire() {
             Name:
           </label>
           <input
-            onChange={getData}
+            onChange={searchedUser ? getDataToUpdate : getData}
             type="text"
             id="name"
             className="w-full px-4 py-2 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
             placeholder="Enter your name"
-            value={formData.name}
+            value={searchedUser ? searchedUser.name : formData.name}
           />
         </div>
         <div>
@@ -60,12 +82,12 @@ function Formulaire() {
             Username:
           </label>
           <input
-            onChange={getData}
+            onChange={searchedUser ? getDataToUpdate : getData}
             type="text"
             id="username"
             className="w-full px-4 py-2 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
             placeholder="Enter your username"
-            value={formData.username}
+            value={searchedUser ? searchedUser.username : formData.username}
           />
         </div>
         <div>
@@ -75,20 +97,29 @@ function Formulaire() {
             Email:
           </label>
           <input
-            onChange={getData}
+            onChange={searchedUser ? getDataToUpdate : getData}
             type="text"
             id="email"
             className="w-full px-4 py-2 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
             placeholder="Enter your email"
-            value={formData.email}
+            value={searchedUser ? searchedUser.email : formData.email}
           />
         </div>
-        <button
-          onClick={handelSubmit}
-          type="submit"
-          className="w-full bg-blue-500 text-white font-medium py-2 px-4 rounded-md hover:bg-blue-600 transition focus:outline-none focus:ring-2 focus:ring-blue-500">
-          Submit
-        </button>
+        {searchedUser ? (
+          <button
+            onClick={handelUpdate}
+            type="submit"
+            className="w-full bg-blue-500 text-white font-medium py-2 px-4 rounded-md hover:bg-blue-600 transition focus:outline-none focus:ring-2 focus:ring-blue-500">
+            Update User
+          </button>
+        ) : (
+          <button
+            onClick={handelSubmit}
+            type="submit"
+            className="w-full bg-blue-500 text-white font-medium py-2 px-4 rounded-md hover:bg-blue-600 transition focus:outline-none focus:ring-2 focus:ring-blue-500">
+            Add User
+          </button>
+        )}
       </form>
 
       {users.length ? (
@@ -114,7 +145,9 @@ function Formulaire() {
                 <td className="p-3 border border-gray-300">{user.username}</td>
                 <td className="p-3 border border-gray-300">{user.email}</td>
                 <td className="p-3 border border-gray-300 space-x-2">
-                  <button className="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600">
+                  <button
+                    className="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600"
+                    onClick={() => getUser(user.id)}>
                     Update
                   </button>
                   <button
